@@ -7,3 +7,7 @@ Software Stack: Bleeding Edge
 Memory: 10Gb
 Cores: 4 
 ```
+and clone this repository:
+```
+git clone https://github.com/llayer/ml_exercise
+```
