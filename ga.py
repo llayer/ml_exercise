@@ -17,41 +17,32 @@ def classification_accuracy(labels, predictions):
     return accuracy
 
 
+
+def fitness(individual, features, labels):
+    
+    reduced_features = reduce_features(individual, features)
+    X_train, X_test, y_train, y_test = train_test_split(reduced_features, labels, test_size=0.33, random_state=42)
+
+    SV_classifier = sklearn.svm.SVC(gamma='scale')
+    SV_classifier.fit(X=X_train, y=y_train)
+    predictions = SV_classifier.decision_function(X_test)
+    
+    return roc_auc_score(y_test, predictions)
+
+
 def cal_pop_fitness(pop, features, labels):
-    accuracies = numpy.zeros(pop.shape[0])
+    
+    scores = numpy.zeros(pop.shape[0])
     idx = 0
-
-    for curr_solution in pop:
+    for individual in pop:
         
-        reduced_features = reduce_features(curr_solution, features)
-        X_train, X_test, y_train, y_test = train_test_split(reduced_features, labels, test_size=0.33, random_state=42)
-
-        """
-        SV_classifier = sklearn.svm.SVC(gamma='scale')
-        SV_classifier.fit(X=X_train, y=y_train)
-
-        predictions = SV_classifier.decision_function(X_test)#.predict(X_test)
-        """
+        score = fitness(individual, features, labels)
+        scores[idx] = score
         
-        # Early stopping
-        early_stopping_rounds = 5
-
-        # Define model
-        model_bdt = xgb.XGBClassifier(n_jobs = 4)
-
-        # Last in list is used for early stopping
-        eval_set = [(X_train, y_train), (X_test, y_test)]
-
-        # Fit with early stopping
-        model_bdt.fit(X_train, y_train, eval_metric=["logloss"], eval_set=eval_set, 
-                      early_stopping_rounds=early_stopping_rounds, verbose=False)
-        
-        predictions = model_bdt.predict_proba(X_test)[:,1]
-
-        accuracies[idx] = roc_auc_score(y_test, predictions) # classification_accuracy(y_test, predictions)
-        print( accuracies[idx] )
+        print( scores[idx] )
         idx = idx + 1
-    return accuracies
+        
+    return scores
 
 def select_mating_pool(pop, fitness, num_parents):
     # Selecting the best individuals in the current generation as parents for producing the offspring of the next generation.
